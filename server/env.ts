@@ -10,5 +10,7 @@ export const ENV = {
   leetecWebhookSecret: (process.env.LEETEC_WEBHOOK_SECRET ?? "").trim(),
   publicAppUrl: (process.env.PUBLIC_APP_URL ?? "").replace(/\/+$/, ""),
   telegramBotUsername: process.env.TELEGRAM_BOT_USERNAME ?? "LeeTechadmin_Bot",
+  supportTelegramBotToken: process.env.SUPPORT_TELEGRAM_BOT_TOKEN ?? "",
+  supportTelegramBotUsername: process.env.SUPPORT_TELEGRAM_BOT_USERNAME ?? "techleehelp_bot",
 };
 export function missingEnv() { return [["MONGODB_URI", ENV.mongodbUri], ["TELEGRAM_BOT_TOKEN", ENV.telegramBotToken], ["TELEGRAM_ADMIN_USER_ID", ENV.telegramAdminUserId], ["LEETEC_API_KEY", ENV.leetecApiKey], ["PUBLIC_APP_URL", ENV.publicAppUrl]].filter(([, value]) => !value).map(([name]) => name); }
