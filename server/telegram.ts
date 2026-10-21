@@ -13,6 +13,7 @@ const supportChats = new Set<number>();
 const pricingMode = new Map<number, { assetId: number; days?: number }>();
 const DEV_CONTACT_URL = `https://t.me/${ENV.supportTelegramBotUsername || "techleehelp_bot"}`;
 let commandsRegistrationStarted = false;
+let telegramSetupStarted = false;
 let appSettings: Record<string, string> = { telegram_url: "https://t.me/techleetel", whatsapp_url: "https://chat.whatsapp.com/HyRgJzzjaVrI1ofiuKDHS2", default_expiry_hours: "168" };
 async function refreshAppSettings() { try { appSettings = { ...appSettings, ...(await getAppSettings()) }; } catch (error) { console.error("[MongoDB] settings load failed", error); } }
 const processedUpdates = new Map<string, number>();
@@ -90,7 +91,7 @@ export async function telegramStatus() {
   const webhook = await api<{ url?: string; pending_update_count?: number; last_error_message?: string; last_error_date?: number }>("getWebhookInfo", {});
   return { bot: me.username ?? null, botId: me.id ?? null, webhookUrl: webhook.url ?? "", pendingUpdates: webhook.pending_update_count ?? 0, lastError: webhook.last_error_message ?? null, lastErrorAt: webhook.last_error_date ? new Date(webhook.last_error_date * 1000).toISOString() : null };
 }
-export function registerTelegramRoutes(app: Express) { app.post("/api/support-telegram/webhook", async (req, res) => { if (!ENV.supportTelegramBotToken) return res.status(404).json({ ok: false }); const expected = createHash("sha256").update(ENV.supportTelegramBotToken).digest("hex").slice(0, 48); if (req.header("x-telegram-bot-api-secret-token") !== expected) return res.status(403).json({ ok: false }); try { await processSupportBotUpdate(req.body as Update); return res.status(200).json({ ok: true }); } catch (error) { console.error("[Support bot] webhook failed", error); return res.status(500).json({ ok: false }); } }); app.post("/api/telegram/webhook", async (req, res) => {
+export function registerTelegramRoutes(app: Express) { if (!telegramSetupStarted) { telegramSetupStarted = true; configureTelegram().catch(error => { telegramSetupStarted = false; console.error("[Telegram] webhook setup failed", error); }); } app.post("/api/support-telegram/webhook", async (req, res) => { if (!ENV.supportTelegramBotToken) return res.status(404).json({ ok: false }); const expected = createHash("sha256").update(ENV.supportTelegramBotToken).digest("hex").slice(0, 48); if (req.header("x-telegram-bot-api-secret-token") !== expected) return res.status(403).json({ ok: false }); try { await processSupportBotUpdate(req.body as Update); return res.status(200).json({ ok: true }); } catch (error) { console.error("[Support bot] webhook failed", error); return res.status(500).json({ ok: false }); } }); app.post("/api/telegram/webhook", async (req, res) => {
   if (req.header("x-telegram-bot-api-secret-token") !== secret()) return res.status(403).json({ ok: false });
   try {
     await processTelegramUpdate(req.body as Update);
