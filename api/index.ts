@@ -1,6 +1,6 @@
 import express from "express";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { registerTelegramRoutes } from "../server/telegram.js";
+import { registerTelegramRoutes, sendExpiryNotifications } from "../server/telegram.js";
 import { ENV } from "../server/env.js";
 import { getAsset, getPaymentLink, readFile, incrementAssetAccess, getSubscriptionCheckout, completeSubscriptionCheckout } from "../server/db.js";
 import { extractCheckoutId, startPayment } from "../server/leetec.js";
